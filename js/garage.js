@@ -155,7 +155,18 @@ export class Garage {
         ? (this.state.selectedCar === m.id ? '<small class="owned-tag">使用中</small>' : '<small class="owned-tag">已拥有</small>')
         : `<small class="lock">🪙 ${m.price}</small>`;
       card.innerHTML = `<div class="thumb">${m.emoji}</div><b>${m.name}</b>${priceTxt}`;
-      card.onclick = () => { this.previewId = m.id; sfx.click(); this._rebuildPreview(); this.refreshAll(); };
+      card.onclick = () => {
+        this.previewId = m.id;
+        sfx.click();
+        // 点击已拥有的车 = 直接选用；未拥有的仅预览（再点购买）
+        if (this.state.ownedCars.includes(m.id)) {
+          this.state.selectedCar = m.id;
+          this.save();
+          if (this.cb.onChange) this.cb.onChange();
+        }
+        this._rebuildPreview();
+        this.refreshAll();
+      };
       this.dom.list.appendChild(card);
     });
   }

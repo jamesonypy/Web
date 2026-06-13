@@ -246,17 +246,20 @@ export function buildCar(params) {
     car.add(wing, supL, supR);
   }
 
-  // ---- 车灯 ----
-  const headMat = new THREE.MeshStandardMaterial({ color: 0xffffee, emissive: 0xffffcc, emissiveIntensity: 0.7 });
-  const tailLMat = new THREE.MeshStandardMaterial({ color: 0xff3b3b, emissive: 0xff1111, emissiveIntensity: 0.6 });
-  const hY = bodyBottom + p.hgt * 0.35;
+  // ---- 车灯（圆形大灯 + 镀铬圈，更拟真）----
+  const headMat = new THREE.MeshStandardMaterial({ color: 0xfff7d0, emissive: 0xfff0b0, emissiveIntensity: 0.85, metalness: 0.2, roughness: 0.2 });
+  const tailLMat = new THREE.MeshStandardMaterial({ color: 0xff3b3b, emissive: 0xff1111, emissiveIntensity: 0.7 });
+  const chromeMat = new THREE.MeshStandardMaterial({ color: 0xc8ccd4, metalness: 0.9, roughness: 0.28 });
+  const hY = bodyBottom + p.hgt * 0.4;
   for (const sx of [-1, 1]) {
-    const hl = box(0.28, 0.16, 0.1, headMat);
-    hl.position.set(sx * p.wid * 0.32, hY, p.len / 2 + 0.13);
-    car.add(hl);
-    const tl = box(0.26, 0.16, 0.08, tailLMat);
+    const hl = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.12, 16), headMat);
+    hl.rotation.x = Math.PI / 2;
+    hl.position.set(sx * p.wid * 0.34, hY, p.len / 2 + 0.11);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.03, 8, 18), chromeMat);
+    ring.position.set(sx * p.wid * 0.34, hY, p.len / 2 + 0.15);
+    const tl = box(0.3, 0.18, 0.08, tailLMat);
     tl.position.set(sx * p.wid * 0.32, hY, -p.len / 2 - 0.11);
-    car.add(tl);
+    car.add(hl, ring, tl);
   }
 
   // ---- 车轮 ----
@@ -272,6 +275,39 @@ export function buildCar(params) {
     w.position.set(x, y, z);
     w.userData.isWheel = true;
     car.add(w);
+  }
+
+  // ---- 拟真细节：保险杠 / 轮眉 / 进气格栅 / 后视镜 / 排气 / 引擎盖装饰 ----
+  const plastic = new THREE.MeshStandardMaterial({ color: 0x23252b, roughness: 0.85, metalness: 0.1 });
+  const chrome2 = new THREE.MeshStandardMaterial({ color: 0xc8ccd4, metalness: 0.9, roughness: 0.3 });
+  const add = (mesh, x, y, z) => { mesh.position.set(x, y, z); car.add(mesh); };
+
+  // 四个轮眉（深色护板，越野风也更立体）
+  const archW = wheelW + 0.28;
+  const archD = wheelR * 2.5;
+  for (const [ax, az] of [[axleX, axleZ], [-axleX, axleZ], [axleX, -axleZ], [-axleX, -axleZ]]) {
+    add(box(archW, 0.16, archD, plastic), ax, bodyBottom + 0.05, az);
+  }
+  // 前后保险杠
+  add(box(p.wid * 0.98, 0.24, 0.34, plastic), 0, bodyBottom + 0.12, p.len / 2 + 0.15);
+  add(box(p.wid * 0.98, 0.24, 0.34, plastic), 0, bodyBottom + 0.12, -p.len / 2 - 0.13);
+  // 进气格栅
+  add(box(p.wid * 0.5, p.hgt * 0.32, 0.05, new THREE.MeshStandardMaterial({ color: 0x121317, metalness: 0.6, roughness: 0.45 })),
+    0, bodyBottom + p.hgt * 0.28, p.len / 2 + 0.14);
+  // 引擎盖镀铬装饰条
+  const hoodFront = p.len / 2, hoodBack = p.cabOff + p.cabLen / 2;
+  const hoodLen = Math.max(0.25, hoodFront - hoodBack);
+  add(box(0.06, 0.04, hoodLen * 0.7, chrome2), 0, bodyBottom + p.hgt + 0.02, (hoodFront + hoodBack) / 2);
+  // 排气管
+  const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.22, 10), chrome2);
+  exhaust.rotation.x = Math.PI / 2;
+  add(exhaust, p.wid * 0.28, bodyBottom + 0.02, -p.len / 2 - 0.18);
+  // 后视镜（封闭车厢才有）
+  if (!p.open) {
+    for (const sx of [-1, 1]) {
+      add(box(0.05, 0.05, 0.12, bodyMat), sx * (cabW / 2 + 0.06), cabBottom + p.cabH * 0.5, p.cabOff + p.cabLen * 0.42);
+      add(box(0.16, 0.11, 0.07, plastic), sx * (cabW / 2 + 0.16), cabBottom + p.cabH * 0.48, p.cabOff + p.cabLen * 0.42);
+    }
   }
 
   // 让所有 mesh 投射阴影

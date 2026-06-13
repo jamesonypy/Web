@@ -12,7 +12,7 @@ const TILE_LEN = 16;
 const TILE_COUNT = 14;
 const PERIOD = TILE_COUNT * TILE_LEN;   // 高度函数在 w 方向的周期
 const TRACK_HALF = 8;                   // 可行驶赛道半宽
-const RIDE = 0.55;                       // 车身离地
+const RIDE = 0.06;                       // 车模型轮底即在原点，仅留极小离地避免穿模
 const SEG_W = 22, SEG_L = 10;           // 瓦片细分
 
 // 周期性地形高度函数（所有 w 频率都是基频 2π/P 的整数倍，保证瓦片循环无缝）
@@ -222,7 +222,8 @@ export class OffroadScene {
   pause() { this.active = false; }
   resume() { this.active = true; }
 
-  setSteer(dir) { this.steerInput = dir; }            // -1 左 / 0 / 1 右
+  // 相机在车后朝 +z 看，世界 +x 显示在屏幕左侧；故转向取反，使按键方向与画面一致
+  setSteer(dir) { this.steerInput = -dir; }           // -1 左 / 0 / 1 右
   setThrottle(on) { this.throttle = on ? 1 : 0.7; }   // 踩=全力，松=巡航
   setBrake(on) { this.braking = on; }
 
