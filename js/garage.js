@@ -56,6 +56,7 @@ export class Garage {
     scene.add(this.turntable);
     this.car = null;
 
+    this._initThumbs();
     this._cacheDom();
     this._bindStatic();
     this._rebuildPreview();
@@ -83,6 +84,50 @@ export class Garage {
     return this.state.customizations[id];
   }
   _owned(id = this.previewId) { return this.state.ownedCars.includes(id); }
+
+  // ---------- 列表用的真实 3D 车模缩略图 ----------
+  _initThumbs() {
+    this.thumbCache = new Map();
+    try {
+      const r = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+      r.setSize(220, 150);
+      r.setClearColor(0x000000, 0);
+      this.thumbRenderer = r;
+      const sc = new THREE.Scene();
+      sc.add(new THREE.HemisphereLight(0xffffff, 0x445066, 1.05));
+      const dl = new THREE.DirectionalLight(0xffffff, 1.1);
+      dl.position.set(4, 7, 5);
+      sc.add(dl);
+      this.thumbScene = sc;
+      const cam = new THREE.PerspectiveCamera(34, 220 / 150, 0.1, 100);
+      cam.position.set(4.6, 2.7, 5.4);
+      cam.lookAt(0, 0.55, 0);
+      this.thumbCam = cam;
+    } catch (e) {
+      this.thumbRenderer = null;   // WebGL 不可用时回退到 emoji
+    }
+  }
+
+  _thumb(model) {
+    if (!this.thumbRenderer) return null;
+    const cz = this.state.customizations[model.id] || {};
+    const key = model.id + "|" + JSON.stringify(cz);
+    if (this.thumbCache.has(key)) return this.thumbCache.get(key);
+    try {
+      const car = buildCar(resolveParams(model, cz));
+      // 居中：让车底贴近 y=0、车头略朝向相机
+      car.rotation.y = -0.6;
+      this.thumbScene.add(car);
+      this.thumbRenderer.render(this.thumbScene, this.thumbCam);
+      const url = this.thumbRenderer.domElement.toDataURL("image/png");
+      this.thumbScene.remove(car);
+      disposeObj(car);
+      this.thumbCache.set(key, url);
+      return url;
+    } catch (e) {
+      return null;
+    }
+  }
 
   // ---------- 静态控件（颜色/质感/轮毂/尾翼）----------
   _bindStatic() {
@@ -133,6 +178,7 @@ export class Garage {
     this.save();
     sfx.click();
     this._rebuildPreview();
+    this._refreshList();          // 缩略图随改装实时更新
     this._refreshCustomizeActive();
     if (this.cb.onChange) this.cb.onChange();
   }
@@ -154,7 +200,11 @@ export class Garage {
       const priceTxt = owned
         ? (this.state.selectedCar === m.id ? '<small class="owned-tag">使用中</small>' : '<small class="owned-tag">已拥有</small>')
         : `<small class="lock">🪙 ${m.price}</small>`;
-      card.innerHTML = `<div class="thumb">${m.emoji}</div><b>${m.name}</b>${priceTxt}`;
+      const url = this._thumb(m);
+      const thumb = url
+        ? `<div class="thumb" style="background-image:url(${url})"></div>`
+        : `<div class="thumb">${m.emoji}</div>`;
+      card.innerHTML = `${thumb}<b>${m.name}</b>${priceTxt}`;
       card.onclick = () => {
         this.previewId = m.id;
         sfx.click();

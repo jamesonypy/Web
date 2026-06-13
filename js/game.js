@@ -14,6 +14,16 @@ const SPAWN_Z = 120;       // 闸门出现的前方距离
 const ROAD_WIDTH = 14;
 const START_LIVES = 3;
 
+// 不同难度的公路环境配色（天空 / 草地 / 路面），随等级循环切换
+const ROAD_THEMES = [
+  { name: "晴空草原", sky: 0x8fd3ff, grass: 0x5cab46, road: 0x40434f },
+  { name: "金色黄昏", sky: 0xffce9a, grass: 0x6a8f3c, road: 0x45414a },
+  { name: "沙漠公路", sky: 0xffe2a8, grass: 0xc9a95f, road: 0x6b5d44 },
+  { name: "雪原赛道", sky: 0xdff1ff, grass: 0xcfe0ea, road: 0x55606b },
+  { name: "霓虹夜行", sky: 0x1c2546, grass: 0x2a3a30, road: 0x2a2d38 },
+  { name: "火星地表", sky: 0xe0a080, grass: 0x9c5030, road: 0x5a3a30 },
+];
+
 export class GameScene {
   constructor(renderer) {
     this.renderer = renderer;
@@ -72,6 +82,7 @@ export class GameScene {
   _buildRoad() {
     this.tiles = [];
     const roadMat = new THREE.MeshStandardMaterial({ color: 0x40434f, roughness: 0.95 });
+    this.roadMat = roadMat;
     const lineMat = new THREE.MeshStandardMaterial({ color: 0xf4d35e, emissive: 0x665500, emissiveIntensity: 0.2 });
     const edgeMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5 });
 
@@ -302,6 +313,13 @@ export class GameScene {
     this.level = level;
     this.targetSpeed = speedForLevel(level);
     if (autoDifficulty) this.auto = makeAutoDifficulty(level);
+
+    // 按难度切换环境配色，使不同难度地图不再雷同
+    const th = ROAD_THEMES[(level - 1) % ROAD_THEMES.length];
+    this.scene.background = new THREE.Color(th.sky);
+    this.scene.fog = new THREE.Fog(th.sky, 70, 150);
+    this.grass.material.color.setHex(th.grass);
+    if (this.roadMat) this.roadMat.color.setHex(th.road);
 
     // 清掉旧车
     if (this.car) { this.carHolder.remove(this.car); disposeObj(this.car); }

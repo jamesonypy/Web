@@ -316,3 +316,17 @@ html, body {
 .stat-bar span { width: 56px; flex-shrink: 0; }
 .stat-bar .track { flex: 1; height: 8px; background: rgba(0,0,0,0.3); border-radius: 6px; overflow: hidden; }
 .stat-bar .fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #38e1c4, #ffce3a); }
+
+/* 车库缩略图：真实 3D 车模渲染图 */
+.car-card .thumb {
+  background-color: #1b2647;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+/* 越野当前地形标签 */
+.theme-tag {
+  position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,12,28,0.6); border-radius: 12px; padding: 3px 12px;
+  font-size: 13px; font-weight: 700; color: var(--accent);
+}

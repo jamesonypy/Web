@@ -157,12 +157,13 @@ function startOffroad() {
 }
 
 offroadScene.setCallbacks({
-  onHud({ score, stars, speed, progress, time }) {
+  onHud({ score, stars, speed, progress, time, theme, level }) {
     $("oScore").textContent = score;
     $("oStars").textContent = stars;
     $("oSpeed").textContent = speed;
     $("oTime").textContent = Math.ceil(time);
     $("oProgress").style.width = (progress * 100).toFixed(1) + "%";
+    $("oTheme").textContent = theme ? `第 ${level} 关 · ${theme}` : "";
   },
   onFinishDrive(res) {
     driveResult = res;
