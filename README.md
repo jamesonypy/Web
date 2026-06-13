@@ -59,20 +59,28 @@
 
 ## 运行方式
 
-游戏使用 ES Modules，需要通过 **HTTP 服务器**打开（直接双击 `index.html` 会被浏览器的
-模块跨域策略拦住）。Three.js 已内置在 `vendor/` 下，**无需联网**。
+**直接双击 `index.html` 即可离线游玩**，无需联网、无需服务器。
 
-任选一种方式，在项目根目录启动本地服务器，然后浏览器访问提示的地址：
+全部代码（含 Three.js）已打包进 `dist/game.bundle.js` 这一个普通脚本，浏览器以
+`file://` 方式打开也不会被模块跨域策略拦住。只要保证 `index.html`、`css/`、
+`dist/` 三者在一起即可。
+
+> 小提示：个别浏览器在 `file://` 下会限制 `localStorage`，导致进度不被保存（游戏照常能玩）。
+> 若希望存档可靠，用下面任意一种方式起个本地服务器再打开即可：
+>
+> ```bash
+> npm run serve          # = python3 -m http.server 8080，访问 http://localhost:8080
+> # 或 npx serve .
+> # 或 VS Code 的 “Live Server” 插件，右键 index.html → Open with Live Server
+> ```
+
+## 修改源码后重新打包
+
+源码在 `js/*.js`（ES Modules）。改完后需重新构建出 `dist/game.bundle.js`：
 
 ```bash
-# Python 3
-python3 -m http.server 8080
-# 然后打开 http://localhost:8080
-
-# 或 Node
-npx serve .
-
-# 或 VS Code 的 “Live Server” 插件，右键 index.html → Open with Live Server
+npm install      # 首次：安装 esbuild 与 three（仅构建时需要）
+npm run build    # 打包；或 npm run watch 监听改动自动重打包
 ```
 
 ---
@@ -81,19 +89,22 @@ npx serve .
 
 ```
 .
-├── index.html          # 入口与界面骨架
-├── css/style.css       # 全部样式（菜单 / 车库 / HUD / 结算）
-├── vendor/
-│   └── three.module.js # 内置的 Three.js (r160)，离线可用
-└── js/
-    ├── main.js         # 主控制器：渲染循环、界面切换、输入
-    ├── game.js         # 玩法场景：道路、车辆、答案闸门、判定与计分
-    ├── carFactory.js   # 程序化生成 12 款车型 + 改装
-    ├── garage.js       # 车库 3D 转台预览 + 购买/改装 UI
-    ├── math.js         # 出题与难度系统（两位数加减、自动调难）
-    ├── storage.js      # localStorage 存档
-    └── audio.js        # WebAudio 合成音效（无音频素材）
+├── index.html              # 入口与界面骨架（加载打包脚本）
+├── css/style.css           # 全部样式（菜单 / 车库 / HUD / 结算）
+├── dist/
+│   └── game.bundle.js      # 打包产物：含 Three.js 的单文件，离线直开
+├── package.json            # 构建脚本（esbuild）
+└── js/                     # 源码（ES Modules）
+    ├── main.js             # 主控制器：渲染循环、界面切换、输入
+    ├── game.js             # 玩法场景：道路、车辆、答案闸门、判定与计分
+    ├── carFactory.js       # 程序化生成 12 款车型 + 改装
+    ├── garage.js           # 车库 3D 转台预览 + 购买/改装 UI
+    ├── math.js             # 出题与难度系统（两位数加减、自动调难）
+    ├── storage.js          # localStorage 存档
+    └── audio.js            # WebAudio 合成音效（无音频素材）
 ```
+
+> 改完 `js/` 下的源码后记得 `npm run build` 重新生成 `dist/game.bundle.js`。
 
 ## 二次开发提示
 - **加新车**：编辑 `js/carFactory.js` 的 `MODELS` 数组，并在 `BODY_PRESETS` 里增/改车身预设。

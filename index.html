@@ -5,14 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>数学赛车 · Math Racer 3D</title>
   <link rel="stylesheet" href="css/style.css" />
-  <!-- Three.js 已随仓库本地内置（vendor/），无需联网；模型全部程序化生成，无需额外素材 -->
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "./vendor/three.module.js"
-    }
-  }
-  </script>
 </head>
 <body>
   <!-- 3D 画布 -->
@@ -23,7 +15,7 @@
     <div class="loading-box">
       <div class="spinner"></div>
       <p>正在加载赛车引擎…</p>
-      <p class="hint">如长时间停留，请用本地服务器打开（见 README）</p>
+      <p class="hint">若长时间停留，请确认 dist/game.bundle.js 与本文件在一起</p>
     </div>
   </div>
 
@@ -149,6 +141,7 @@
     </div>
   </div>
 
-  <script type="module" src="js/main.js"></script>
+  <!-- 全部代码（含 Three.js）已打包为单个普通脚本，可直接双击本文件离线游玩 -->
+  <script src="dist/game.bundle.js"></script>
 </body>
 </html>
