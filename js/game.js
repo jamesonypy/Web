@@ -5,7 +5,9 @@ import { buildCar } from "./carFactory.js";
 import { generateProblem, speedForLevel, makeAutoDifficulty, MAX_LEVEL } from "./math.js";
 import { sfx } from "./audio.js";
 
-const LANES = [-3.5, 0, 3.5];
+// 相机在车后方朝 +z 看，世界 +x 会显示在屏幕左侧；
+// 因此按「车道 0 = 屏幕最左」排列 x 坐标，保证左右键方向与画面一致。
+const LANES = [3.5, 0, -3.5];
 const TILE_LEN = 20;
 const TILE_COUNT = 10;
 const SPAWN_Z = 120;       // 闸门出现的前方距离
