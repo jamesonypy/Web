@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>数学赛车 · Math Racer 3D</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Three.js 已随仓库本地内置（vendor/），无需联网；模型全部程序化生成，无需额外素材 -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three.module.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- 3D 画布 -->
+  <canvas id="scene"></canvas>
+
+  <!-- 加载提示 -->
+  <div id="loading" class="screen">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <p>正在加载赛车引擎…</p>
+      <p class="hint">如长时间停留，请用本地服务器打开（见 README）</p>
+    </div>
+  </div>
+
+  <!-- 主菜单 -->
+  <div id="menu" class="screen hidden">
+    <div class="menu-card">
+      <h1 class="title">数学赛车 <span>3D</span></h1>
+      <p class="subtitle">开着小车，练两位数加减法！</p>
+
+      <div class="stat-row">
+        <div class="stat"><span class="ico">🪙</span><b id="menuCoins">0</b><small>金币</small></div>
+        <div class="stat"><span class="ico">🏆</span><b id="menuBest">0</b><small>最好成绩</small></div>
+      </div>
+
+      <div class="diff-block">
+        <label>难度</label>
+        <div id="diffButtons" class="diff-buttons"></div>
+        <label class="switch">
+          <input type="checkbox" id="autoDiff" />
+          <span>自动调整难度（连对升级 / 答错降级）</span>
+        </label>
+      </div>
+
+      <div class="menu-actions">
+        <button id="btnPlay" class="btn btn-big btn-primary">🚦 开始游戏</button>
+        <button id="btnGarage" class="btn btn-big">🔧 车 库</button>
+      </div>
+      <button id="btnSound" class="btn btn-ghost">🔊 声音：开</button>
+      <p class="credit">方向键 / A·D 或屏幕左右切换车道</p>
+    </div>
+  </div>
+
+  <!-- 车库 -->
+  <div id="garage" class="screen hidden">
+    <div class="garage-top">
+      <button id="garageBack" class="btn btn-ghost">← 返回</button>
+      <div class="stat"><span class="ico">🪙</span><b id="garageCoins">0</b></div>
+    </div>
+
+    <div class="garage-body">
+      <div class="garage-info">
+        <h2 id="carName">—</h2>
+        <p id="carDesc" class="car-desc"></p>
+        <div id="carPriceRow" class="price-row"></div>
+
+        <div class="customize">
+          <h3>🎨 改装</h3>
+          <div class="cz-group">
+            <label>车身颜色</label>
+            <div id="bodyColors" class="swatches"></div>
+          </div>
+          <div class="cz-group">
+            <label>车漆质感</label>
+            <div id="finishBtns" class="seg"></div>
+          </div>
+          <div class="cz-group">
+            <label>轮毂样式</label>
+            <div id="wheelStyles" class="seg"></div>
+          </div>
+          <div class="cz-group">
+            <label>轮毂颜色</label>
+            <div id="wheelColors" class="swatches"></div>
+          </div>
+          <div class="cz-group">
+            <label>尾翼</label>
+            <div id="spoilerBtns" class="seg"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="garage-list" id="garageList"></div>
+    </div>
+  </div>
+
+  <!-- 游戏内 HUD -->
+  <div id="hud" class="screen hidden no-bg">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="pill">🪙 <b id="hudCoins">0</b></div>
+        <div class="pill">⭐ <b id="hudScore">0</b></div>
+        <div class="pill">LV <b id="hudLevel">1</b></div>
+      </div>
+      <div class="hud-right">
+        <div id="hudLives" class="lives"></div>
+        <button id="btnPause" class="btn btn-ghost small">⏸</button>
+      </div>
+    </div>
+
+    <div id="question" class="question hidden"></div>
+    <div id="combo" class="combo hidden"></div>
+
+    <div class="touch-controls">
+      <button id="touchLeft" class="touch-btn">◀</button>
+      <button id="touchRight" class="touch-btn">▶</button>
+    </div>
+  </div>
+
+  <!-- 暂停 -->
+  <div id="pause" class="screen hidden">
+    <div class="menu-card small">
+      <h2>暂停</h2>
+      <button id="btnResume" class="btn btn-big btn-primary">▶ 继续</button>
+      <button id="btnQuit" class="btn btn-big">退出到车库</button>
+    </div>
+  </div>
+
+  <!-- 结算 -->
+  <div id="gameover" class="screen hidden">
+    <div class="menu-card">
+      <h2>本局结束</h2>
+      <div class="result-grid">
+        <div><small>得分</small><b id="overScore">0</b></div>
+        <div><small>赚到金币</small><b id="overCoins">0</b></div>
+        <div><small>答对</small><b id="overRight">0</b></div>
+        <div><small>正确率</small><b id="overAcc">0%</b></div>
+      </div>
+      <p id="overBadge" class="badge hidden">🎉 新纪录！</p>
+      <div class="menu-actions">
+        <button id="btnReplay" class="btn btn-big btn-primary">🔁 再来一局</button>
+        <button id="btnToGarage" class="btn btn-big">🔧 去车库</button>
+      </div>
+      <button id="btnToMenu" class="btn btn-ghost">回主菜单</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
