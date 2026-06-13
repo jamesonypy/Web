@@ -96,6 +96,34 @@ function box(w, h, d, mat) {
   return new THREE.Mesh(g, mat);
 }
 
+// 圆角盒子：用带倒角的挤出几何体生成各边圆润的车身块，比直角盒子更像真车
+function roundedRectShape(w, h, r) {
+  r = Math.max(0.01, Math.min(r, w / 2 - 0.01, h / 2 - 0.01));
+  const s = new THREE.Shape();
+  const x = -w / 2, y = -h / 2;
+  s.moveTo(x + r, y);
+  s.lineTo(x + w - r, y);
+  s.quadraticCurveTo(x + w, y, x + w, y + r);
+  s.lineTo(x + w, y + h - r);
+  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  s.lineTo(x + r, y + h);
+  s.quadraticCurveTo(x, y + h, x, y + h - r);
+  s.lineTo(x, y + r);
+  s.quadraticCurveTo(x, y, x + r, y);
+  return s;
+}
+function roundedBox(w, h, d, r, bevel, mat) {
+  const bs = Math.max(0.01, Math.min(bevel, d / 2 - 0.02, w / 2 - 0.02, h / 2 - 0.02));
+  const shape = roundedRectShape(w, h, r);
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: Math.max(0.02, d - 2 * bs), bevelEnabled: true,
+    bevelThickness: bs, bevelSize: bs, bevelSegments: 3, steps: 1, curveSegments: 5,
+  });
+  geo.translate(0, 0, -(d / 2 - bs));
+  geo.computeVertexNormals();
+  return new THREE.Mesh(geo, mat);
+}
+
 // 生成一个车轮（含轮胎 + 轮毂）
 function makeWheel(radius, width, wheelColor, style) {
   const group = new THREE.Group();
@@ -154,18 +182,18 @@ export function buildCar(params) {
   const bodyBottom = wheelR + ride; // 车身底部 y
   const bodyCY = bodyBottom + p.hgt / 2; // 下车身中心 y
 
-  // ---- 下车身 ----
-  const lower = box(p.wid, p.hgt, p.len, bodyMat);
+  // ---- 下车身（圆角车身，贴近真车曲面）----
+  const bodyR = Math.min(0.30, p.hgt * 0.5, p.wid * 0.24);
+  const lower = roundedBox(p.wid, p.hgt, p.len, bodyR, Math.min(0.30, p.len * 0.12), bodyMat);
   lower.position.y = bodyCY;
   car.add(lower);
 
-  // 车头/车尾稍微收窄，营造层次（小斜面块）
-  const nose = box(p.wid * 0.9, p.hgt * 0.55, 0.5, bodyMat);
-  nose.position.set(0, bodyBottom + p.hgt * 0.3, p.len / 2 + 0.12);
-  car.add(nose);
-  const tail = box(p.wid * 0.92, p.hgt * 0.6, 0.4, bodyMat);
-  tail.position.set(0, bodyBottom + p.hgt * 0.35, -p.len / 2 - 0.1);
-  car.add(tail);
+  // 侧裙 / 防擦条（车身下沿深色，增强层次）
+  for (const sx of [-1, 1]) {
+    const sill = box(0.06, p.hgt * 0.22, p.len * 0.62, darkMat(0x1e2025));
+    sill.position.set(sx * (p.wid / 2 - 0.02), bodyBottom + p.hgt * 0.16, 0);
+    car.add(sill);
+  }
 
   // ---- 货斗（皮卡）----
   if (p.bed) {
@@ -178,40 +206,41 @@ export function buildCar(params) {
     wall(p.wid, 0.35, 1.7, 0, -p.len / 2 + 0.9 + 0.85); // 后部货斗外框近似
   }
 
-  // ---- 座舱 ----
-  const cabW = p.wid * (params.bodyType === "van" ? 0.95 : 0.86);
-  const cabBottom = bodyBottom + p.hgt - 0.05;
-  const cab = box(cabW, p.cabH, p.cabLen, p.open ? darkMat(0x222531) : bodyMat);
-  cab.position.set(0, cabBottom + p.cabH / 2, p.cabOff);
-  car.add(cab);
-
-  // 玻璃窗（前/后/侧）
+  // ---- 座舱（圆角车顶 + 环绕车窗 + 倾斜前后挡风）----
+  const cabW = p.wid * (params.bodyType === "van" ? 0.94 : 0.82); // 略收窄做出收腰
+  const cabBottom = bodyBottom + p.hgt - 0.08;
   if (!p.open) {
-    const gW = cabW + 0.02;
-    const winH = p.cabH * 0.6;
-    const winY = cabBottom + p.cabH * 0.55;
-    // 侧窗
-    const sideL = box(gW, winH, p.cabLen * 0.82, glassMat());
-    sideL.position.set(0, winY, p.cabOff);
-    sideL.scale.x = 1.0; // 让玻璃略大于车身在两侧露出
-    car.add(sideL);
-    // 前挡风
-    const front = box(cabW * 0.82, winH, 0.12, glassMat());
-    front.position.set(0, winY, p.cabOff + p.cabLen / 2);
-    car.add(front);
-    // 后挡风
-    const back = box(cabW * 0.82, winH * 0.9, 0.12, glassMat());
-    back.position.set(0, winY, p.cabOff - p.cabLen / 2);
-    car.add(back);
+    // 车顶（车身色）
+    const cabR = Math.min(0.26, p.cabH * 0.42, cabW * 0.22);
+    const roof = roundedBox(cabW, p.cabH, p.cabLen, cabR, Math.min(0.18, p.cabLen * 0.12), bodyMat);
+    roof.position.set(0, cabBottom + p.cabH / 2, p.cabOff);
+    car.add(roof);
+
+    const winH = p.cabH * 0.52;
+    const winY = cabBottom + p.cabH * 0.5;
+    // 环绕车窗（深色玻璃带，前后留出立柱）
+    const band = roundedBox(cabW + 0.04, winH, p.cabLen * 0.72, 0.1, 0.06, glassMat());
+    band.position.set(0, winY, p.cabOff);
+    car.add(band);
+    // 倾斜前挡风
+    const wsH = p.cabH * 0.92;
+    const ws = box(cabW * 0.9, wsH, 0.05, glassMat());
+    ws.position.set(0, winY + 0.04, p.cabOff + p.cabLen / 2 - 0.04);
+    ws.rotation.x = -0.5;
+    car.add(ws);
+    // 倾斜后窗
+    const rw = box(cabW * 0.9, wsH * 0.85, 0.05, glassMat());
+    rw.position.set(0, winY + 0.04, p.cabOff - p.cabLen / 2 + 0.04);
+    rw.rotation.x = 0.55;
+    car.add(rw);
   } else {
-    // 敞篷：内舱
+    // 敞篷：内舱 + 挡风片
     const seat = box(cabW * 0.7, 0.2, p.cabLen * 0.6, darkMat(0x33323a));
-    seat.position.set(0, cabBottom + 0.1, p.cabOff - 0.1);
+    seat.position.set(0, cabBottom + 0.12, p.cabOff - 0.1);
     car.add(seat);
-    // 挡风玻璃片
-    const ws = box(cabW * 0.8, 0.35, 0.06, glassMat());
-    ws.position.set(0, cabBottom + 0.3, p.cabOff + p.cabLen / 2);
-    ws.rotation.x = -0.25;
+    const ws = box(cabW * 0.82, 0.4, 0.05, glassMat());
+    ws.position.set(0, cabBottom + 0.32, p.cabOff + p.cabLen / 2);
+    ws.rotation.x = -0.32;
     car.add(ws);
   }
 
@@ -282,15 +311,15 @@ export function buildCar(params) {
   const chrome2 = new THREE.MeshStandardMaterial({ color: 0xc8ccd4, metalness: 0.9, roughness: 0.3 });
   const add = (mesh, x, y, z) => { mesh.position.set(x, y, z); car.add(mesh); };
 
-  // 四个轮眉（深色护板，越野风也更立体）
+  // 四个圆润轮眉（深色护板）
   const archW = wheelW + 0.28;
-  const archD = wheelR * 2.5;
+  const archD = wheelR * 2.55;
   for (const [ax, az] of [[axleX, axleZ], [-axleX, axleZ], [axleX, -axleZ], [-axleX, -axleZ]]) {
-    add(box(archW, 0.16, archD, plastic), ax, bodyBottom + 0.05, az);
+    add(roundedBox(archW, 0.18, archD, 0.08, 0.06, plastic), ax, bodyBottom + 0.04, az);
   }
-  // 前后保险杠
-  add(box(p.wid * 0.98, 0.24, 0.34, plastic), 0, bodyBottom + 0.12, p.len / 2 + 0.15);
-  add(box(p.wid * 0.98, 0.24, 0.34, plastic), 0, bodyBottom + 0.12, -p.len / 2 - 0.13);
+  // 前后保险杠（圆角）
+  add(roundedBox(p.wid * 0.98, 0.26, 0.34, 0.1, 0.1, plastic), 0, bodyBottom + 0.12, p.len / 2 + 0.14);
+  add(roundedBox(p.wid * 0.98, 0.26, 0.34, 0.1, 0.1, plastic), 0, bodyBottom + 0.12, -p.len / 2 - 0.12);
   // 进气格栅
   add(box(p.wid * 0.5, p.hgt * 0.32, 0.05, new THREE.MeshStandardMaterial({ color: 0x121317, metalness: 0.6, roughness: 0.45 })),
     0, bodyBottom + p.hgt * 0.28, p.len / 2 + 0.14);

@@ -99,9 +99,9 @@ export class Garage {
       dl.position.set(4, 7, 5);
       sc.add(dl);
       this.thumbScene = sc;
-      const cam = new THREE.PerspectiveCamera(34, 220 / 150, 0.1, 100);
-      cam.position.set(4.6, 2.7, 5.4);
-      cam.lookAt(0, 0.55, 0);
+      const cam = new THREE.PerspectiveCamera(38, 220 / 150, 0.1, 100);
+      cam.position.set(5.2, 3.0, 6.0);
+      cam.lookAt(0, 0.75, 0);
       this.thumbCam = cam;
     } catch (e) {
       this.thumbRenderer = null;   // WebGL 不可用时回退到 emoji
