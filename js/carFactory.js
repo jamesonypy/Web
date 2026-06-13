@@ -4,6 +4,7 @@ import * as THREE from "three";
 
 // ---------- 可购买车型列表 ----------
 export const MODELS = [
+  { id: "junker",   name: "小破车",   emoji: "🚙", price: 0,    desc: "锈迹斑斑的二手越野车，动力弱但底盘还行，越野起点。", base: { bodyType: "junker", color: 0x9c7a4d, finish: "matte", wheelStyle: "offroad" } },
   { id: "starter",  name: "小蜜蜂",   emoji: "🐝", price: 0,    desc: "灵巧的入门两厢车，新手好伙伴。", base: { bodyType: "hatchback", color: 0xffd23f } },
   { id: "cityCab",  name: "城市轿车", emoji: "🚗", price: 150,  desc: "经典三厢轿车，沉稳大方。",       base: { bodyType: "sedan", color: 0x4aa3ff } },
   { id: "roadster", name: "敞篷跑车", emoji: "🏎️", price: 320,  desc: "低矮敞篷，风驰电掣。",           base: { bodyType: "roadster", color: 0xff5d6c } },
@@ -20,6 +21,30 @@ export const MODELS = [
 
 export function getModel(id) {
   return MODELS.find((m) => m.id === id) || MODELS[0];
+}
+
+// ---------- 车辆性能（越野模式用）----------
+// power 动力/极速, grip 转向抓地, clearance 离地间隙(越野通过性, 影响颠簸减速)
+// 跑车动力强但底盘低 → 越野通过性差；SUV/吉普通过性好。买车因此有意义。
+const STATS_BY_BODY = {
+  junker:    { power: 0.32, grip: 0.42, clearance: 0.55 },
+  hatchback: { power: 0.40, grip: 0.50, clearance: 0.30 },
+  sedan:     { power: 0.50, grip: 0.55, clearance: 0.22 },
+  roadster:  { power: 0.74, grip: 0.72, clearance: 0.10 },
+  sports:    { power: 0.82, grip: 0.74, clearance: 0.12 },
+  muscle:    { power: 0.78, grip: 0.52, clearance: 0.22 },
+  suv:       { power: 0.62, grip: 0.60, clearance: 0.78 },
+  pickup:    { power: 0.64, grip: 0.52, clearance: 0.80 },
+  van:       { power: 0.48, grip: 0.46, clearance: 0.42 },
+  jeep:      { power: 0.70, grip: 0.62, clearance: 0.98 },
+  retro:     { power: 0.42, grip: 0.46, clearance: 0.32 },
+  super:     { power: 0.98, grip: 0.88, clearance: 0.08 },
+};
+
+export function getStats(model) {
+  const bt = (model.base && model.base.bodyType) || "sedan";
+  const s = STATS_BY_BODY[bt] || STATS_BY_BODY.sedan;
+  return { ...s, ...(model.stats || {}) };
 }
 
 // ---------- 改装可选项 ----------
@@ -41,6 +66,7 @@ export const WHEEL_STYLES = [
 
 // ---------- 车身预设 ----------
 const BODY_PRESETS = {
+  junker:    { len: 3.6, wid: 1.85, hgt: 0.95, cabLen: 1.8, cabH: 0.85, cabOff: 0.0, ride: 0.42, wheelR: 0.52, roofRack: true },
   hatchback: { len: 3.8, wid: 1.9, hgt: 0.85, cabLen: 1.9, cabH: 0.78, cabOff: -0.1, ride: 0.18, wheelR: 0.42 },
   sedan:     { len: 4.4, wid: 1.95, hgt: 0.82, cabLen: 1.9, cabH: 0.72, cabOff: -0.15, ride: 0.16, wheelR: 0.42 },
   roadster:  { len: 4.2, wid: 1.95, hgt: 0.62, cabLen: 1.3, cabH: 0.48, cabOff: -0.35, ride: 0.12, wheelR: 0.44, open: true },

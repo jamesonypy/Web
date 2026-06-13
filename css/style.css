@@ -252,3 +252,67 @@ html, body {
 @media (hover: hover) and (pointer: fine) {
   .touch-controls { opacity: 0.5; }
 }
+
+/* ============ 越野模式 ============ */
+.btn-accent { background: linear-gradient(180deg, #38e1c4, #1fb89d); color: #04332c; box-shadow: 0 6px 0 #157e6b; }
+.btn-accent:active { box-shadow: 0 2px 0 #157e6b; }
+
+/* 进度条 */
+.progress-wrap {
+  position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
+  width: min(420px, 80vw); display: flex; align-items: center; gap: 8px;
+}
+.progress-bar {
+  flex: 1; height: 12px; border-radius: 8px;
+  background: rgba(8,12,28,0.55); overflow: hidden; border: 1px solid rgba(255,255,255,0.2);
+}
+.progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #38e1c4, #ffce3a);
+  transition: width 0.15s linear;
+}
+.progress-flag { font-size: 18px; }
+
+/* 越野操控：左右 + 油门刹车 */
+.offroad-controls {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  padding: 0 16px 24px;
+}
+.pedals { display: flex; gap: 10px; align-items: flex-end; }
+.pedal {
+  border: none; border-radius: 16px; color: #fff; font-weight: 800; font-size: 16px;
+  font-family: inherit; cursor: pointer; backdrop-filter: blur(4px);
+}
+.pedal.gas { width: 96px; height: 64px; background: rgba(56,225,196,0.55); }
+.pedal.brake { width: 64px; height: 52px; background: rgba(255,93,108,0.5); }
+.pedal:active { filter: brightness(1.2); }
+
+/* 通关测验 */
+.quiz-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+.quiz-meta b { color: var(--primary); }
+.question.quiz-q {
+  position: static; transform: none; display: block; margin: 0 auto 16px;
+  width: fit-content; font-size: 30px;
+}
+.quiz-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.quiz-choices.two { grid-template-columns: repeat(2, 1fr); }
+.quiz-choice {
+  background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.12); color: var(--txt);
+  border-radius: 14px; padding: 18px 8px; font-size: 26px; font-weight: 800;
+  font-family: inherit; cursor: pointer; transition: 0.12s;
+}
+.quiz-choice:hover { border-color: var(--primary); }
+.quiz-choice.right { background: rgba(46,230,166,0.85); color: #042a25; border-color: #2ee6a6; }
+.quiz-choice.wrong { background: rgba(255,93,108,0.85); color: #2a0006; border-color: #ff5d6c; }
+.quiz-choice:disabled { cursor: default; }
+.quiz-feedback { min-height: 24px; margin-top: 14px; font-weight: 700; font-size: 18px; }
+.quiz-feedback.ok { color: var(--accent); }
+.quiz-feedback.bad { color: var(--danger); }
+
+/* 车辆性能条 */
+.car-stats { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
+.stat-bar { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.stat-bar span { width: 56px; flex-shrink: 0; }
+.stat-bar .track { flex: 1; height: 8px; background: rgba(0,0,0,0.3); border-radius: 6px; overflow: hidden; }
+.stat-bar .fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #38e1c4, #ffce3a); }

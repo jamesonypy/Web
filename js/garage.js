@@ -1,7 +1,7 @@
 // 车库：3D 转台预览 + 购买 / 改装 UI
 import * as THREE from "three";
 import {
-  MODELS, getModel, resolveParams, buildCar,
+  MODELS, getModel, resolveParams, buildCar, getStats,
   BODY_COLORS, WHEEL_COLORS, FINISHES, WHEEL_STYLES,
 } from "./carFactory.js";
 import { sfx } from "./audio.js";
@@ -68,6 +68,7 @@ export class Garage {
       coins: document.getElementById("garageCoins"),
       name: document.getElementById("carName"),
       desc: document.getElementById("carDesc"),
+      stats: document.getElementById("carStats"),
       price: document.getElementById("carPriceRow"),
       bodyColors: document.getElementById("bodyColors"),
       finish: document.getElementById("finishBtns"),
@@ -163,6 +164,7 @@ export class Garage {
     const m = getModel(this.previewId);
     this.dom.name.textContent = m.name;
     this.dom.desc.textContent = m.desc;
+    this._renderStats(m);
     this.dom.price.innerHTML = "";
 
     const owned = this._owned();
@@ -205,6 +207,16 @@ export class Garage {
     sfx.click();
     this.refreshAll();
     if (this.cb.onChange) this.cb.onChange();
+  }
+
+  _renderStats(m) {
+    const s = getStats(m);
+    const rows = [
+      ["动力", s.power], ["操控", s.grip], ["越野", s.clearance],
+    ];
+    this.dom.stats.innerHTML = rows.map(([label, v]) =>
+      `<div class="stat-bar"><span>${label}</span><div class="track"><div class="fill" style="width:${Math.round(v * 100)}%"></div></div></div>`
+    ).join("");
   }
 
   _refreshCustomizeActive() {

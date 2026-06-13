@@ -2,13 +2,15 @@
 const KEY = "math-racer-3d-save-v1";
 
 const DEFAULT_STATE = {
-  coins: 120,                 // 起始金币，够买第一辆便宜车
-  ownedCars: ["starter"],     // 默认拥有入门小车
+  coins: 120,                       // 起始金币，够买第一辆便宜车
+  ownedCars: ["junker", "starter"], // 默认拥有：越野小破车 + 公路入门车
   selectedCar: "starter",
-  customizations: {},         // { carId: {color, finish, wheelStyle, wheelColor, spoiler} }
-  bestScore: 0,
-  difficulty: 1,              // 当前选择的难度等级 (1..6)
-  autoDifficulty: true,       // 是否自动调整难度
+  customizations: {},               // { carId: {color, finish, wheelStyle, wheelColor, spoiler} }
+  bestScore: 0,                     // 公路模式最好成绩
+  offroadBest: 0,                   // 越野模式最好成绩
+  offroadLevel: 1,                  // 越野已解锁/到达的关卡
+  difficulty: 1,                    // 当前选择的难度等级 (1..6)
+  autoDifficulty: true,             // 是否自动调整难度
   sound: true,
 };
 
@@ -17,7 +19,11 @@ export function loadState() {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(DEFAULT_STATE);
     const parsed = JSON.parse(raw);
-    return { ...structuredClone(DEFAULT_STATE), ...parsed };
+    const state = { ...structuredClone(DEFAULT_STATE), ...parsed };
+    // 迁移：确保老存档也免费拥有越野小破车
+    if (!Array.isArray(state.ownedCars)) state.ownedCars = ["junker", "starter"];
+    if (!state.ownedCars.includes("junker")) state.ownedCars.unshift("junker");
+    return state;
   } catch (e) {
     console.warn("读取存档失败，使用默认存档", e);
     return structuredClone(DEFAULT_STATE);

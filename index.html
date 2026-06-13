@@ -40,7 +40,8 @@
       </div>
 
       <div class="menu-actions">
-        <button id="btnPlay" class="btn btn-big btn-primary">🚦 开始游戏</button>
+        <button id="btnPlay" class="btn btn-big btn-primary">🏁 公路答题模式</button>
+        <button id="btnOffroad" class="btn btn-big btn-accent">⛰️ 越野闯关模式</button>
         <button id="btnGarage" class="btn btn-big">🔧 车 库</button>
       </div>
       <button id="btnSound" class="btn btn-ghost">🔊 声音：开</button>
@@ -59,6 +60,7 @@
       <div class="garage-info">
         <h2 id="carName">—</h2>
         <p id="carDesc" class="car-desc"></p>
+        <div id="carStats" class="car-stats"></div>
         <div id="carPriceRow" class="price-row"></div>
 
         <div class="customize">
@@ -138,6 +140,68 @@
         <button id="btnToGarage" class="btn btn-big">🔧 去车库</button>
       </div>
       <button id="btnToMenu" class="btn btn-ghost">回主菜单</button>
+    </div>
+  </div>
+
+  <!-- 越野模式 HUD -->
+  <div id="ohud" class="screen hidden no-bg">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="pill">⭐ <b id="oStars">0</b></div>
+        <div class="pill">🏅 <b id="oScore">0</b></div>
+        <div class="pill">⏱ <b id="oTime">0</b></div>
+      </div>
+      <div class="hud-right">
+        <div class="pill">🏎 <b id="oSpeed">0</b></div>
+        <button id="btnOPause" class="btn btn-ghost small">⏸</button>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div id="oProgress" class="progress-fill"></div></div>
+      <span class="progress-flag">🏁</span>
+    </div>
+
+    <div class="offroad-controls">
+      <button id="oLeft" class="touch-btn">◀</button>
+      <div class="pedals">
+        <button id="oBrake" class="pedal brake">刹</button>
+        <button id="oGas" class="pedal gas">油门</button>
+      </div>
+      <button id="oRight" class="touch-btn">▶</button>
+    </div>
+  </div>
+
+  <!-- 通关测验 -->
+  <div id="quiz" class="screen hidden">
+    <div class="menu-card">
+      <h2>🎉 通关！来做题</h2>
+      <p class="subtitle">答对加分，答错会扣掉闯关得分哦</p>
+      <div class="quiz-meta">
+        <span id="quizProgress">第 1 / 3 题</span>
+        <span>当前得分 <b id="quizScore">0</b></span>
+      </div>
+      <div id="quizQuestion" class="question quiz-q">— = ?</div>
+      <div id="quizChoices" class="quiz-choices"></div>
+      <div id="quizFeedback" class="quiz-feedback"></div>
+    </div>
+  </div>
+
+  <!-- 越野结算 -->
+  <div id="oresult" class="screen hidden">
+    <div class="menu-card">
+      <h2 id="oresultTitle">闯关结算</h2>
+      <div class="result-grid">
+        <div><small>闯关得分</small><b id="orDrive">0</b></div>
+        <div><small>答题增减</small><b id="orQuiz">0</b></div>
+        <div><small>最终得分</small><b id="orFinal">0</b></div>
+        <div><small>赚到金币</small><b id="orCoins">0</b></div>
+      </div>
+      <p id="orBadge" class="badge hidden">🎉 越野新纪录！</p>
+      <div class="menu-actions">
+        <button id="btnOReplay" class="btn btn-big btn-primary">🔁 再闯一次</button>
+        <button id="btnOGarage" class="btn btn-big">🔧 去车库</button>
+      </div>
+      <button id="btnOMenu" class="btn btn-ghost">回主菜单</button>
     </div>
   </div>
 
