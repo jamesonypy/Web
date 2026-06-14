@@ -4,6 +4,7 @@ import { GameScene } from "./game.js";
 import { OffroadScene } from "./offroad.js";
 import { Garage } from "./garage.js";
 import { getModel, resolveParams, getStats } from "./carFactory.js";
+import { OFFROAD_LEVEL_COUNT, offroadLevelName } from "./offroad.js";
 import { DIFFICULTY_LEVELS, MAX_LEVEL, generateProblem } from "./math.js";
 import { loadState, saveState } from "./storage.js";
 import { sfx, setSoundEnabled } from "./audio.js";
@@ -65,8 +66,28 @@ function buildDifficultyButtons() {
   });
 }
 
+function buildOffroadLevels() {
+  const cont = $("offroadLevels");
+  cont.innerHTML = "";
+  for (let lv = 1; lv <= OFFROAD_LEVEL_COUNT; lv++) {
+    const locked = lv > state.offroadUnlocked;
+    const chip = document.createElement("button");
+    chip.className = "lchip" + (lv === state.offroadLevel ? " active" : "") + (locked ? " locked" : "");
+    chip.innerHTML = `<b>${locked ? "🔒" : lv}</b><small>${offroadLevelName(lv)}</small>`;
+    chip.disabled = locked;
+    chip.onclick = () => {
+      if (locked) return;
+      state.offroadLevel = lv; save(); sfx.click();
+      cont.querySelectorAll(".lchip").forEach((x) => x.classList.remove("active"));
+      chip.classList.add("active");
+    };
+    cont.appendChild(chip);
+  }
+}
+
 function showMenu() {
   hideAll(); show("menu", true);
+  buildOffroadLevels();
   renderTarget = "garage"; activeMode = null;
   garage.previewId = state.selectedCar;
   garage._rebuildPreview();
@@ -233,13 +254,17 @@ function finishQuiz() {
   const finalScore = Math.round(qs.score);
   const base = Math.round(qs.base);
   const delta = finalScore - base;
-  const coins = Math.round(finalScore * 0.5);
+  const coins = Math.round(finalScore * 0.15);   // 积分换金币比例下调，避免过快买齐
 
   state.coins += coins;
   const isRecord = finalScore > state.offroadBest;
   if (isRecord) state.offroadBest = finalScore;
-  // 成功通关推进关卡（赛道更长、限时更紧）
-  if (driveResult.reason === "finish") state.offroadLevel = Math.min(8, state.offroadLevel + 1);
+  // 成功通关：解锁下一关并自动切到新关卡
+  if (driveResult.reason === "finish") {
+    const next = Math.min(OFFROAD_LEVEL_COUNT, driveResult.level + 1);
+    state.offroadUnlocked = Math.max(state.offroadUnlocked, next);
+    state.offroadLevel = next;
+  }
   // 自动难度：全对升级，错两题及以上降级
   if (state.autoDifficulty) {
     if (qs.correct === qs.n && state.difficulty < MAX_LEVEL) state.difficulty++;

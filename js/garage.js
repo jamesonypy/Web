@@ -173,7 +173,6 @@ export class Garage {
   }
 
   _setCustom(key, val) {
-    if (!this._owned()) return; // 未拥有不可改装
     this._custom()[key] = val;
     this.save();
     sfx.click();
@@ -281,7 +280,6 @@ export class Garage {
   }
 
   _refreshCustomizeActive() {
-    const owned = this._owned();
     const params = resolveParams(getModel(this.previewId), this._custom());
     const setActive = (container, attr, value) => {
       container.querySelectorAll("[data-" + attr + "]").forEach((el) => {
@@ -289,8 +287,8 @@ export class Garage {
         const match = String(value) === v || Number(value) === Number(v) ||
           (attr === "spoiler" && ((value && v === "on") || (!value && v === "off")));
         el.classList.toggle("active", match);
-        el.style.opacity = owned ? "1" : "0.4";
-        el.style.pointerEvents = owned ? "auto" : "none";
+        el.style.opacity = "1";
+        el.style.pointerEvents = "auto";
       });
     };
     setActive(this.dom.bodyColors, "color", params.color);

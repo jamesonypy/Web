@@ -12,8 +12,8 @@ const TILE_LEN = 16;
 const TILE_COUNT = 14;
 const PERIOD = TILE_COUNT * TILE_LEN;   // 高度函数在 w 方向的周期
 const TRACK_HALF = 8;                   // 可行驶赛道半宽
-const RIDE = 0.06;                       // 车模型轮底即在原点，仅留极小离地避免穿模
-const SEG_W = 22, SEG_L = 10;           // 瓦片细分
+const SEG_W = 40, SEG_L = 18;           // 瓦片细分（提高精度，让车轮贴合地面）
+const BAND_LEN = 280;                    // 混合地图中每个生物群系的长度
 
 // 周期性地形高度函数（所有 w 频率都是基频 2π/P 的整数倍，保证瓦片循环无缝）
 const K = (2 * Math.PI) / PERIOD;
@@ -43,6 +43,20 @@ const THEMES = [
   { id: "volcano", name: "火山",   sky: 0x53384a, fogNear: 40, fogFar: 100, hemi: [0xff8a5a, 0x331a1a],
     track: 0x3a3338, trackHi: 0x57484a, grass: 0x2e2730, grassHi: 0x4a3a3a, rockHi: 0x7a3a30, scenery: "rock",   amp: 1.3 },
 ];
+const themeById = (id) => THEMES.find((t) => t.id === id) || THEMES[0];
+
+// 关卡方案：前 6 关单一风格，后面是「混合地图」（沿途切换多个生物群系）
+const COURSE_PLAN = [
+  { theme: "grass" }, { theme: "desert" }, { theme: "river" }, { theme: "glacier" },
+  { theme: "canyon" }, { theme: "volcano" },
+  { name: "混合·绿洲之路", mixed: ["grass", "desert", "glacier"] },
+  { name: "混合·秘境穿越", mixed: ["canyon", "river", "volcano"] },
+];
+export const OFFROAD_LEVEL_COUNT = COURSE_PLAN.length;
+export function offroadLevelName(level) {
+  const plan = COURSE_PLAN[(level - 1) % COURSE_PLAN.length];
+  return plan.name || themeById(plan.theme).name;
+}
 
 export class OffroadScene {
   constructor(renderer) {
@@ -91,47 +105,68 @@ export class OffroadScene {
 
   // ---------- 主题 ----------
   _applyTheme(level) {
-    this.theme = THEMES[(level - 1) % THEMES.length];
-    this.amp = this.theme.amp;
-    this.scene.background = new THREE.Color(this.theme.sky);
+    const plan = COURSE_PLAN[(level - 1) % COURSE_PLAN.length];
+    if (plan.mixed) {
+      this.mixed = plan.mixed.map(themeById);
+      this.theme = this.mixed[0];
+      this.amp = 1.0;                 // 混合地图统一振幅，保证高度连续
+    } else {
+      this.mixed = null;
+      this.theme = themeById(plan.theme);
+      this.amp = this.theme.amp;
+    }
+    this._curSky = new THREE.Color(this.theme.sky);
+    this.scene.background = this._curSky.clone();
     this.scene.fog = new THREE.Fog(this.theme.sky, this.theme.fogNear, this.theme.fogFar);
     if (this.hemi) { this.hemi.color.setHex(this.theme.hemi[0]); this.hemi.groundColor.setHex(this.theme.hemi[1]); }
   }
 
-  // ---------- 地形（按主题配色 + 振幅）----------
+  // 某世界纵坐标 worldZ 处生效的主题（混合地图按段切换）
+  _bandTheme(worldZ) {
+    if (!this.mixed) return this.theme;
+    const idx = Math.floor(Math.max(0, worldZ) / BAND_LEN) % this.mixed.length;
+    return this.mixed[idx];
+  }
+
+  // ---------- 地形 ----------
   _disposeTerrain() {
     for (const t of this.tiles) { this.scene.remove(t); disposeObj(t); }
     this.tiles = [];
   }
+  // 给一块瓦片按其当前世界位置着色（混合地图回收时需重新着色）
+  _colorTile(tile) {
+    const pos = tile.geometry.attributes.position;
+    const colors = tile.geometry.attributes.color;
+    for (let v = 0; v < pos.count; v++) {
+      const x = pos.getX(v);
+      const y = pos.getY(v);
+      const worldZ = tile.position.z + pos.getZ(v);
+      const th = this._bandTheme(worldZ);
+      let c;
+      const onTrack = Math.abs(x) < TRACK_HALF;
+      if (onTrack) c = new THREE.Color(th.track).lerp(new THREE.Color(th.trackHi), Math.max(0, Math.min(1, (y + 1.5 * this.amp) / (3 * this.amp))));
+      else if (y > 1.3 * this.amp) c = new THREE.Color(th.rockHi);
+      else c = new THREE.Color(th.grass).lerp(new THREE.Color(th.grassHi), 0.2);
+      colors.setXYZ(v, c.r, c.g, c.b);
+    }
+    colors.needsUpdate = true;
+  }
   _buildTerrain() {
-    const th = this.theme;
-    const cTrack = new THREE.Color(th.track), cTrackHi = new THREE.Color(th.trackHi);
-    const cGrass = new THREE.Color(th.grass), cGrassHi = new THREE.Color(th.grassHi);
-    const cRock = new THREE.Color(th.rockHi);
     for (let i = 0; i < TILE_COUNT; i++) {
       const geo = new THREE.PlaneGeometry(TILE_W, TILE_LEN, SEG_W, SEG_L);
       geo.rotateX(-Math.PI / 2);
       const baseZ = i * TILE_LEN - TILE_LEN;
       const pos = geo.attributes.position;
-      const colors = [];
       for (let v = 0; v < pos.count; v++) {
-        const x = pos.getX(v);
-        const w = baseZ + pos.getZ(v);
-        const y = terrainH(x, w, this.amp);
-        pos.setY(v, y);
-        const onTrack = Math.abs(x) < TRACK_HALF;
-        let c;
-        if (onTrack) c = cTrack.clone().lerp(cTrackHi, Math.max(0, Math.min(1, (y + 1.5 * this.amp) / (3 * this.amp))));
-        else if (y > 1.3 * this.amp) c = cRock.clone();
-        else c = cGrass.clone().lerp(cGrassHi, Math.random() * 0.4);
-        colors.push(c.r, c.g, c.b);
+        pos.setY(v, terrainH(pos.getX(v), baseZ + pos.getZ(v), this.amp));
       }
-      geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+      geo.setAttribute("color", new THREE.Float32BufferAttribute(new Float32Array(pos.count * 3), 3));
       geo.computeVertexNormals();
       const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 });
       const tile = new THREE.Mesh(geo, mat);
       tile.position.z = baseZ;
       tile.receiveShadow = true;
+      this._colorTile(tile);
       this.scene.add(tile);
       this.tiles.push(tile);
     }
@@ -173,7 +208,9 @@ export class OffroadScene {
   }
   // 按主题生成两侧装饰：树 / 仙人掌 / 雪松 / 岩石
   _makeScenery() {
-    const kind = this.theme.scenery;
+    const kind = this.mixed
+      ? ["tree", "cactus", "pine", "rock"][Math.floor(Math.random() * 4)]
+      : this.theme.scenery;
     const g = new THREE.Group();
     if (kind === "cactus") {
       const mat = new THREE.MeshStandardMaterial({ color: 0x4a8c3a, roughness: 0.9 });
@@ -260,8 +297,12 @@ export class OffroadScene {
     this.phase = 0;
     this.carX = 0;
     this.v = 0;
-    this.carY = RIDE;
+    this.bodyY = 0;
     this.vy = 0;
+    this.pitch = 0;
+    this.roll = 0;
+    this.steerAngle = 0;
+    this.wheelSpin = 0;
     this.steerInput = 0;
     this.throttle = 0.7;   // 默认巡航(0.7)，踩油门时 1，保证不卡死又有加速感
     this.braking = false;
@@ -292,14 +333,15 @@ export class OffroadScene {
     this.car = buildCar(carParams);
     this.carTilt.add(this.car);
 
-    this.camera.position.set(0, RIDE + 4.2, -9);
-    this.camera.lookAt(0, RIDE + 1, 14);
+    this.bodyY = terrainH(0, 0, this.amp);
+    this.camera.position.set(0, this.bodyY + 4.4, -9);
+    this.camera.lookAt(0, this.bodyY + 1, 14);
 
     this.active = true;
     this._pushHud();
   }
 
-  get themeName() { return this.theme ? this.theme.name : ""; }
+  get themeName() { return offroadLevelName(this.level || 1); }
 
   stop() { this.active = false; }
   pause() { this.active = false; }
@@ -385,36 +427,69 @@ export class OffroadScene {
     this.carX += this.steerInput * turnRate * speedFactor * dt;
     this.carX = Math.max(-TRACK_HALF, Math.min(TRACK_HALF, this.carX));
 
-    // —— 地面瓦片滚动 + 循环 ——
+    // —— 地面瓦片滚动 + 循环（混合地图回收时按新位置重着色）——
     const move = this.v * dt;
     for (const tile of this.tiles) {
       tile.position.z -= move;
-      if (tile.position.z < -TILE_LEN * 1.5) tile.position.z += PERIOD;
+      if (tile.position.z < -TILE_LEN * 1.5) {
+        tile.position.z += PERIOD;
+        if (this.mixed) this._colorTile(tile);
+      }
     }
 
-    // —— 车辆垂直（弹簧悬挂，可短暂腾空）——
-    const groundY = hHere + RIDE;
-    const k = 60, c = 9;
-    this.vy += (groundY - this.carY) * k * dt - this.vy * c * dt;
-    this.carY += this.vy * dt;
-    if (this.carY < groundY) { this.carY = groundY; if (this.vy < 0) this.vy = 0; }
+    // —— 接地：用四个车轮处的地形高度，让车身贴地并产生俯仰/侧倾 ——
+    const ud = this.car ? this.car.userData : null;
+    let avg = hHere, tPitch = 0, tRoll = 0;
+    if (ud && ud.wheels) {
+      const ax = ud.axleX, az = ud.axleZ;
+      const hc = (wx, wz) => terrainH(this.carX + wx, this.phase + wz, A);
+      const fl = hc(ax, az), fr = hc(-ax, az), rl = hc(ax, -az), rr = hc(-ax, -az);
+      avg = (fl + fr + rl + rr) / 4;
+      tPitch = -Math.atan2((fl + fr) / 2 - (rl + rr) / 2, 2 * az);   // 上坡抬头
+      tRoll = Math.atan2((fl + rl) / 2 - (fr + rr) / 2, 2 * ax);
+      for (const wdef of ud.wheels) {
+        const wc = hc(wdef.fx, wdef.fz);
+        wdef.mesh.position.y = wdef.restY + Math.max(-0.22, Math.min(0.22, wc - avg)); // 悬挂行程
+        if (wdef.front) wdef.mesh.rotation.y = this.steerAngle;                          // 前轮转向
+      }
+    }
 
-    // —— 姿态 ——
-    this.carYaw.position.set(this.carX, this.carY, 0);
-    this.carYaw.rotation.y = this.steerInput * 0.18 * speedFactor;
-    this.carTilt.rotation.x = Math.max(-0.5, Math.min(0.5, -dHdw * 0.5));
-    this.carTilt.rotation.z = Math.max(-0.4, Math.min(0.4, dHdx * 0.5));
-    if (this.car) {
-      const spin = (this.v / 0.5) * dt;
-      this.car.traverse((o) => { if (o.userData && o.userData.isWheel) o.rotation.x += spin; });
+    // 车身高度：弹簧跟随平均地形（带悬挂回弹），不再悬空
+    const k = 80, c = 14;
+    this.vy += (avg - this.bodyY) * k * dt - this.vy * c * dt;
+    this.bodyY += this.vy * dt;
+
+    // 前轮转向角（平滑）+ 车轮滚动
+    this.steerAngle += (this.steerInput * 0.5 - this.steerAngle) * Math.min(1, dt * 10);
+    if (ud && ud.wheels) {
+      this.wheelSpin += (this.v / (ud.wheelR || 0.5)) * dt;
+      for (const wdef of ud.wheels) wdef.mesh.rotation.x = this.wheelSpin;
+    }
+
+    // 俯仰/侧倾平滑，并叠加转弯时的车身侧倾（更有动感）
+    const leanRoll = -this.steerInput * speedFactor * 0.12;
+    this.pitch += (tPitch - this.pitch) * Math.min(1, dt * 7);
+    this.roll += (tRoll + leanRoll - this.roll) * Math.min(1, dt * 7);
+
+    // —— 应用姿态 ——
+    this.carYaw.position.set(this.carX, this.bodyY, 0);
+    this.carYaw.rotation.y = this.steerInput * 0.14 * speedFactor;
+    this.carTilt.rotation.x = Math.max(-0.5, Math.min(0.5, this.pitch));
+    this.carTilt.rotation.z = Math.max(-0.45, Math.min(0.45, this.roll));
+
+    // —— 混合地图：天空/雾随当前段渐变 ——
+    if (this.mixed && this._curSky) {
+      const th = this._bandTheme(this.phase);
+      this._curSky.lerp(new THREE.Color(th.sky), Math.min(1, dt * 1.5));
+      this.scene.background = this._curSky;
+      if (this.scene.fog) this.scene.fog.color.copy(this._curSky);
     }
 
     // —— 相机跟随 ——
-    const camTargetX = this.carX * 0.55;
-    this.camera.position.x += (camTargetX - this.camera.position.x) * Math.min(1, dt * 4);
-    this.camera.position.y += (this.carY + 4.2 - this.camera.position.y) * Math.min(1, dt * 4);
+    this.camera.position.x += (this.carX * 0.55 - this.camera.position.x) * Math.min(1, dt * 4);
+    this.camera.position.y += (this.bodyY + 4.4 - this.camera.position.y) * Math.min(1, dt * 4);
     this.camera.position.z = -9;
-    this.camera.lookAt(this.carX * 0.6, this.carY + 1.0, 14);
+    this.camera.lookAt(this.carX * 0.6, this.bodyY + 1.0, 14);
 
     // —— 道具滚动 / 碰撞 ——
     this._inMud = false;

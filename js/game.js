@@ -249,7 +249,7 @@ export class GameScene {
 
     if (correct) {
       this.correctCount++;
-      const gain = 8 + this.level * 2 + this.combo * 2;
+      const gain = 3 + this.level + Math.min(8, Math.floor(this.combo / 2));
       this.coins += gain;
       this.coinsEarned += gain;
       this.combo++;

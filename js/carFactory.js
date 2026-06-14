@@ -3,48 +3,55 @@
 import * as THREE from "three";
 
 // ---------- 可购买车型列表 ----------
+// 价格越高 → 性能(power/grip/clearance 综合)越强、外观等级(tier)越高。
+// tier: 0 朴素 / 1 普通 / 2 运动(车身拉花) / 3 顶级(金属漆+大尾翼+双排气)
 export const MODELS = [
-  { id: "junker",   name: "小破车",   emoji: "🚙", price: 0,    desc: "锈迹斑斑的二手越野车，动力弱但底盘还行，越野起点。", base: { bodyType: "junker", color: 0x9c7a4d, finish: "matte", wheelStyle: "offroad" } },
-  { id: "starter",  name: "小蜜蜂",   emoji: "🐝", price: 0,    desc: "灵巧的入门两厢车，新手好伙伴。", base: { bodyType: "hatchback", color: 0xffd23f } },
-  { id: "cityCab",  name: "城市轿车", emoji: "🚗", price: 150,  desc: "经典三厢轿车，沉稳大方。",       base: { bodyType: "sedan", color: 0x4aa3ff } },
-  { id: "roadster", name: "敞篷跑车", emoji: "🏎️", price: 320,  desc: "低矮敞篷，风驰电掣。",           base: { bodyType: "roadster", color: 0xff5d6c } },
-  { id: "gtSport",  name: "GT 跑车",  emoji: "🚙", price: 480,  desc: "流线车身，自带尾翼。",           base: { bodyType: "sports", color: 0x2ee6a6, spoiler: true } },
-  { id: "muscle",   name: "肌肉车",   emoji: "🚘", price: 600,  desc: "粗犷引擎盖，复古力量感。",       base: { bodyType: "muscle", color: 0xff8c1a } },
-  { id: "suvX",     name: "都市 SUV", emoji: "🚐", price: 750,  desc: "高底盘，全家出行首选。",         base: { bodyType: "suv", color: 0x7b6cff, wheelStyle: "offroad" } },
-  { id: "pickup",   name: "皮卡王",   emoji: "🛻", price: 900,  desc: "带货斗的硬派皮卡。",             base: { bodyType: "pickup", color: 0x3ccf7a } },
-  { id: "van",      name: "欢乐巴士", emoji: "🚌", price: 1050, desc: "圆润可爱的小巴士。",             base: { bodyType: "van", color: 0xff79c6 } },
-  { id: "monster",  name: "怪兽越野", emoji: "🚜", price: 1400, desc: "超大轮胎，翻山越岭。",           base: { bodyType: "jeep", color: 0x44d62c, wheelStyle: "offroad" } },
-  { id: "retro",    name: "复古甲壳", emoji: "🚕", price: 1700, desc: "圆头圆脑的复古经典。",           base: { bodyType: "retro", color: 0xf6c453 } },
-  { id: "superCar", name: "超级跑车", emoji: "🏁", price: 2400, desc: "极致宽体，赛道之王。",           base: { bodyType: "super", color: 0xff2e63, spoiler: true, finish: "metallic" } },
-  { id: "phantom",  name: "幻影银箭", emoji: "✨", price: 3500, desc: "顶级豪华，金属流光。",           base: { bodyType: "super", color: 0xc0c8ff, finish: "metallic", spoiler: true } },
+  { id: "junker",   name: "小破车",   emoji: "🚙", price: 0,    tier: 0, desc: "锈迹斑斑的二手越野车，动力弱但底盘高，越野起点。",
+    base: { bodyType: "junker", color: 0x9c7a4d, finish: "matte", wheelStyle: "offroad" }, stats: { power: 0.30, grip: 0.36, clearance: 0.50 } },
+  { id: "starter",  name: "小蜜蜂",   emoji: "🐝", price: 0,    tier: 0, desc: "灵巧的入门两厢车，新手好伙伴。",
+    base: { bodyType: "hatchback", color: 0xffd23f }, stats: { power: 0.34, grip: 0.42, clearance: 0.30 } },
+  { id: "cityCab",  name: "城市轿车", emoji: "🚗", price: 200,  tier: 0, desc: "经典三厢轿车，沉稳大方。",
+    base: { bodyType: "sedan", color: 0x4aa3ff }, stats: { power: 0.44, grip: 0.50, clearance: 0.34 } },
+  { id: "retro",    name: "复古甲壳", emoji: "🚕", price: 450,  tier: 1, desc: "圆头圆脑的复古经典，小巧灵活。",
+    base: { bodyType: "retro", color: 0xf6c453, accent: 0xffffff }, stats: { power: 0.48, grip: 0.52, clearance: 0.42 } },
+  { id: "van",      name: "欢乐巴士", emoji: "🚌", price: 750,  tier: 1, desc: "圆润可爱的小巴士，稳健耐造。",
+    base: { bodyType: "van", color: 0xff79c6, accent: 0xffffff }, stats: { power: 0.54, grip: 0.54, clearance: 0.52 } },
+  { id: "roadster", name: "敞篷跑车", emoji: "🏎️", price: 1100, tier: 1, desc: "低矮敞篷，公路上风驰电掣。",
+    base: { bodyType: "roadster", color: 0xff5d6c, wheelStyle: "sport" }, stats: { power: 0.66, grip: 0.70, clearance: 0.36 } },
+  { id: "pickup",   name: "皮卡王",   emoji: "🛻", price: 1600, tier: 1, desc: "带货斗的硬派皮卡，越野好手。",
+    base: { bodyType: "pickup", color: 0x3ccf7a, wheelStyle: "offroad", accent: 0x1e1e22 }, stats: { power: 0.66, grip: 0.58, clearance: 0.68 } },
+  { id: "muscle",   name: "肌肉车",   emoji: "🚘", price: 2300, tier: 2, desc: "粗犷引擎盖，强劲力量感。",
+    base: { bodyType: "muscle", color: 0xff8c1a, accent: 0x1e1e22, wheelStyle: "sport" }, stats: { power: 0.80, grip: 0.70, clearance: 0.58 } },
+  { id: "suvX",     name: "都市 SUV", emoji: "🚐", price: 3000, tier: 2, desc: "高底盘全能，铺装越野都拿手。",
+    base: { bodyType: "suv", color: 0x7b6cff, wheelStyle: "offroad", accent: 0xffffff }, stats: { power: 0.76, grip: 0.72, clearance: 0.84 } },
+  { id: "gtSport",  name: "GT 跑车",  emoji: "🚙", price: 4200, tier: 2, desc: "流线车身、运动尾翼，弯道利器。",
+    base: { bodyType: "sports", color: 0x2ee6a6, spoiler: true, wheelStyle: "sport", accent: 0x101014 }, stats: { power: 0.90, grip: 0.86, clearance: 0.64 } },
+  { id: "monster",  name: "怪兽越野", emoji: "🚜", price: 5800, tier: 3, desc: "超大轮胎，翻山越岭无所不能。",
+    base: { bodyType: "jeep", color: 0x44d62c, wheelStyle: "offroad", accent: 0x101014 }, stats: { power: 0.86, grip: 0.78, clearance: 0.98 } },
+  { id: "superCar", name: "超级跑车", emoji: "🏁", price: 8000, tier: 3, desc: "极致宽体、金属车漆，赛道之王。",
+    base: { bodyType: "super", color: 0xff2e63, spoiler: true, finish: "metallic", wheelStyle: "sport", accent: 0xffffff }, stats: { power: 0.96, grip: 0.92, clearance: 0.82 } },
+  { id: "phantom",  name: "幻影银箭", emoji: "✨", price: 12000, tier: 3, desc: "顶级全能旗舰，性能外观皆拉满。",
+    base: { bodyType: "super", color: 0xc0c8ff, finish: "metallic", spoiler: true, wheelStyle: "sport", accent: 0x1b2a55 }, stats: { power: 1.0, grip: 0.98, clearance: 0.87 } },
 ];
 
 export function getModel(id) {
   return MODELS.find((m) => m.id === id) || MODELS[0];
 }
 
-// ---------- 车辆性能（越野模式用）----------
-// power 动力/极速, grip 转向抓地, clearance 离地间隙(越野通过性, 影响颠簸减速)
-// 跑车动力强但底盘低 → 越野通过性差；SUV/吉普通过性好。买车因此有意义。
+// 车辆性能（越野模式用）：power 动力/极速, grip 转向抓地, clearance 离地间隙/通过性
 const STATS_BY_BODY = {
-  junker:    { power: 0.32, grip: 0.42, clearance: 0.55 },
-  hatchback: { power: 0.40, grip: 0.50, clearance: 0.30 },
-  sedan:     { power: 0.50, grip: 0.55, clearance: 0.22 },
-  roadster:  { power: 0.74, grip: 0.72, clearance: 0.10 },
-  sports:    { power: 0.82, grip: 0.74, clearance: 0.12 },
-  muscle:    { power: 0.78, grip: 0.52, clearance: 0.22 },
-  suv:       { power: 0.62, grip: 0.60, clearance: 0.78 },
-  pickup:    { power: 0.64, grip: 0.52, clearance: 0.80 },
-  van:       { power: 0.48, grip: 0.46, clearance: 0.42 },
-  jeep:      { power: 0.70, grip: 0.62, clearance: 0.98 },
-  retro:     { power: 0.42, grip: 0.46, clearance: 0.32 },
-  super:     { power: 0.98, grip: 0.88, clearance: 0.08 },
+  junker: { power: 0.32, grip: 0.42, clearance: 0.55 }, hatchback: { power: 0.40, grip: 0.50, clearance: 0.30 },
+  sedan: { power: 0.50, grip: 0.55, clearance: 0.22 }, roadster: { power: 0.74, grip: 0.72, clearance: 0.10 },
+  sports: { power: 0.82, grip: 0.74, clearance: 0.12 }, muscle: { power: 0.78, grip: 0.52, clearance: 0.22 },
+  suv: { power: 0.62, grip: 0.60, clearance: 0.78 }, pickup: { power: 0.64, grip: 0.52, clearance: 0.80 },
+  van: { power: 0.48, grip: 0.46, clearance: 0.42 }, jeep: { power: 0.70, grip: 0.62, clearance: 0.98 },
+  retro: { power: 0.42, grip: 0.46, clearance: 0.32 }, super: { power: 0.98, grip: 0.88, clearance: 0.08 },
 };
 
 export function getStats(model) {
+  if (model.stats) return { ...model.stats };
   const bt = (model.base && model.base.bodyType) || "sedan";
-  const s = STATS_BY_BODY[bt] || STATS_BY_BODY.sedan;
-  return { ...s, ...(model.stats || {}) };
+  return { ...(STATS_BY_BODY[bt] || STATS_BY_BODY.sedan) };
 }
 
 // ---------- 改装可选项 ----------
@@ -168,6 +175,8 @@ export function resolveParams(model, customization = {}) {
     wheelStyle: customization.wheelStyle ?? base.wheelStyle ?? "standard",
     wheelColor: customization.wheelColor ?? base.wheelColor ?? 0x1a1a1a,
     spoiler: customization.spoiler ?? base.spoiler ?? false,
+    tier: model.tier ?? 0,
+    accent: base.accent ?? 0xffffff,
   };
 }
 
@@ -299,11 +308,14 @@ export function buildCar(params) {
     [axleX, wheelR, axleZ], [-axleX, wheelR, axleZ],
     [axleX, wheelR, -axleZ], [-axleX, wheelR, -axleZ],
   ];
+  const wheels = [];
   for (const [x, y, z] of positions) {
     const w = makeWheel(wheelR, wheelW, params.wheelColor, params.wheelStyle);
     w.position.set(x, y, z);
+    w.rotation.order = "YXZ";   // 先转向(Y)再滚动(X)
     w.userData.isWheel = true;
     car.add(w);
+    wheels.push({ mesh: w, fx: x, fz: z, front: z > 0, restY: y });
   }
 
   // ---- 拟真细节：保险杠 / 轮眉 / 进气格栅 / 后视镜 / 排气 / 引擎盖装饰 ----
@@ -327,10 +339,14 @@ export function buildCar(params) {
   const hoodFront = p.len / 2, hoodBack = p.cabOff + p.cabLen / 2;
   const hoodLen = Math.max(0.25, hoodFront - hoodBack);
   add(box(0.06, 0.04, hoodLen * 0.7, chrome2), 0, bodyBottom + p.hgt + 0.02, (hoodFront + hoodBack) / 2);
-  // 排气管
-  const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.22, 10), chrome2);
-  exhaust.rotation.x = Math.PI / 2;
-  add(exhaust, p.wid * 0.28, bodyBottom + 0.02, -p.len / 2 - 0.18);
+  // 排气管（tier>=3 为双出）
+  const tier = params.tier || 0;
+  const exN = tier >= 3 ? [0.16, 0.42] : [0.28];
+  for (const ex of exN) {
+    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.22, 10), chrome2);
+    pipe.rotation.x = Math.PI / 2;
+    add(pipe, p.wid * ex, bodyBottom + 0.02, -p.len / 2 - 0.18);
+  }
   // 后视镜（封闭车厢才有）
   if (!p.open) {
     for (const sx of [-1, 1]) {
@@ -338,10 +354,24 @@ export function buildCar(params) {
       add(box(0.16, 0.11, 0.07, plastic), sx * (cabW / 2 + 0.16), cabBottom + p.cabH * 0.48, p.cabOff + p.cabLen * 0.42);
     }
   }
+  // 高配车身拉花（tier>=2，双条赛车条纹）
+  if (tier >= 2) {
+    const stripeMat = new THREE.MeshStandardMaterial({ color: params.accent, metalness: 0.35, roughness: 0.4 });
+    for (const sx of [-1, 1]) {
+      const stripe = box(0.12, 0.025, p.len * 0.96, stripeMat);
+      stripe.position.set(sx * p.wid * 0.16, bodyBottom + p.hgt + 0.01, 0);
+      car.add(stripe);
+    }
+  }
 
   // 让所有 mesh 投射阴影
   car.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; } });
 
+  // 供越野模式做每轮悬挂 / 前轮转向 / 姿态
+  car.userData.wheels = wheels;
+  car.userData.axleX = axleX;
+  car.userData.axleZ = axleZ;
+  car.userData.wheelR = wheelR;
   car.userData.length = p.len;
   car.userData.width = p.wid;
   return car;

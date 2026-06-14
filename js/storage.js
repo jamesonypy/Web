@@ -8,7 +8,8 @@ const DEFAULT_STATE = {
   customizations: {},               // { carId: {color, finish, wheelStyle, wheelColor, spoiler} }
   bestScore: 0,                     // 公路模式最好成绩
   offroadBest: 0,                   // 越野模式最好成绩
-  offroadLevel: 1,                  // 越野已解锁/到达的关卡
+  offroadLevel: 1,                  // 越野当前选择的关卡
+  offroadUnlocked: 1,               // 越野已解锁到的最高关卡
   difficulty: 1,                    // 当前选择的难度等级 (1..6)
   autoDifficulty: true,             // 是否自动调整难度
   sound: true,
@@ -23,6 +24,8 @@ export function loadState() {
     // 迁移：确保老存档也免费拥有越野小破车
     if (!Array.isArray(state.ownedCars)) state.ownedCars = ["junker", "starter"];
     if (!state.ownedCars.includes("junker")) state.ownedCars.unshift("junker");
+    // 迁移：解锁进度至少覆盖历史到达过的关卡
+    state.offroadUnlocked = Math.max(state.offroadUnlocked || 1, state.offroadLevel || 1, 1);
     return state;
   } catch (e) {
     console.warn("读取存档失败，使用默认存档", e);
