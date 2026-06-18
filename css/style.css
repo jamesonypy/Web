@@ -1,0 +1,344 @@
+:root {
+  --bg: #0e1630;
+  --card: rgba(20, 30, 60, 0.92);
+  --primary: #ffce3a;
+  --primary-d: #f2a900;
+  --accent: #38e1c4;
+  --danger: #ff5d6c;
+  --txt: #eef3ff;
+  --muted: #9fb0d6;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  color: var(--txt);
+  background: var(--bg);
+  user-select: none;
+}
+
+#scene {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  background: radial-gradient(circle at 50% 20%, rgba(40, 60, 120, 0.55), rgba(8, 12, 28, 0.85));
+  backdrop-filter: blur(2px);
+}
+.screen.no-bg { background: none; backdrop-filter: none; pointer-events: none; }
+.screen.no-bg .btn, .screen.no-bg .touch-btn { pointer-events: auto; }
+.hidden { display: none !important; }
+
+/* ---------- Loading ---------- */
+.loading-box { text-align: center; }
+.spinner {
+  width: 54px; height: 54px; margin: 0 auto 18px;
+  border: 6px solid rgba(255,255,255,0.18);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.hint { color: var(--muted); font-size: 13px; }
+
+/* ---------- Cards ---------- */
+.menu-card {
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+  padding: 30px 34px 26px;
+  width: min(440px, 92vw);
+  box-shadow: var(--shadow);
+  text-align: center;
+  animation: pop 0.35s ease;
+}
+.menu-card.small { width: min(340px, 90vw); }
+@keyframes pop { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.title {
+  font-size: 42px; margin: 4px 0 2px;
+  letter-spacing: 1px;
+  text-shadow: 0 4px 0 var(--primary-d);
+}
+.title span { color: var(--primary); }
+.subtitle { color: var(--muted); margin: 0 0 18px; }
+
+.stat-row { display: flex; gap: 14px; justify-content: center; margin-bottom: 18px; }
+.stat {
+  background: rgba(0,0,0,0.25);
+  border-radius: 14px;
+  padding: 8px 16px;
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 90px;
+}
+.stat .ico { font-size: 20px; }
+.stat b { font-size: 22px; color: var(--primary); }
+.stat small { color: var(--muted); font-size: 12px; }
+
+/* ---------- Difficulty ---------- */
+.diff-block { text-align: left; margin-bottom: 16px; }
+.diff-block > label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px; }
+.diff-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+.diff-buttons .db {
+  background: rgba(0,0,0,0.25);
+  border: 2px solid transparent;
+  color: var(--txt);
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.15s;
+}
+.diff-buttons .db b { display: block; font-size: 14px; }
+.diff-buttons .db small { color: var(--muted); font-size: 11px; }
+.diff-buttons .db.active { border-color: var(--primary); background: rgba(255,206,58,0.14); }
+
+.switch { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.switch input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  font-family: inherit;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--txt);
+  background: rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: transform 0.08s, filter 0.15s;
+}
+.btn:active { transform: translateY(2px) scale(0.99); }
+.btn:hover { filter: brightness(1.08); }
+.btn-big { width: 100%; padding: 14px; font-size: 18px; margin-top: 8px; }
+.btn-primary { background: linear-gradient(180deg, var(--primary), var(--primary-d)); color: #3a2a00; box-shadow: 0 6px 0 #b88300; }
+.btn-primary:active { box-shadow: 0 2px 0 #b88300; }
+.btn-ghost { background: transparent; color: var(--muted); margin-top: 10px; }
+.btn-ghost.small { padding: 6px 12px; font-size: 18px; }
+.btn.disabled, .btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+.menu-actions { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.credit { color: var(--muted); font-size: 12px; margin: 14px 0 0; }
+
+/* ---------- Garage ---------- */
+#garage { flex-direction: column; justify-content: flex-start; background: linear-gradient(180deg, rgba(10,16,36,0.4), rgba(10,16,36,0.85)); }
+.garage-top {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px; pointer-events: auto;
+}
+.garage-body {
+  width: 100%; flex: 1; display: flex; gap: 16px; padding: 0 18px 18px;
+  max-width: 1100px; margin: 0 auto; min-height: 0;
+}
+.garage-info {
+  background: var(--card); border-radius: 20px; padding: 18px 20px;
+  width: 320px; flex-shrink: 0; overflow-y: auto; box-shadow: var(--shadow);
+}
+.garage-info h2 { margin: 0 0 4px; font-size: 24px; }
+.car-desc { color: var(--muted); font-size: 13px; margin: 0 0 12px; min-height: 18px; }
+.price-row { margin-bottom: 16px; }
+.price-row .btn { width: 100%; }
+.owned-tag { color: var(--accent); font-weight: 700; }
+
+.customize h3 { margin: 6px 0 10px; font-size: 16px; }
+.cz-group { margin-bottom: 12px; }
+.cz-group > label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+.swatch {
+  width: 28px; height: 28px; border-radius: 8px; cursor: pointer;
+  border: 3px solid transparent; transition: 0.12s;
+}
+.swatch.active { border-color: #fff; transform: scale(1.12); }
+.seg { display: flex; gap: 6px; flex-wrap: wrap; }
+.seg button {
+  background: rgba(0,0,0,0.28); border: 2px solid transparent; color: var(--txt);
+  border-radius: 10px; padding: 7px 12px; cursor: pointer; font-size: 13px; font-family: inherit;
+}
+.seg button.active { border-color: var(--primary); background: rgba(255,206,58,0.16); }
+
+.garage-list {
+  flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px; align-content: start; overflow-y: auto; padding: 4px; min-height: 0;
+}
+.car-card {
+  background: var(--card); border: 2px solid transparent; border-radius: 16px;
+  padding: 12px; cursor: pointer; transition: 0.15s; text-align: center;
+}
+.car-card:hover { transform: translateY(-3px); }
+.car-card.active { border-color: var(--primary); }
+.car-card .thumb {
+  width: 100%; height: 70px; border-radius: 10px; margin-bottom: 8px;
+  background: radial-gradient(circle at 50% 40%, #2a3a66, #141d3a);
+  display: flex; align-items: center; justify-content: center; font-size: 32px;
+}
+.car-card b { display: block; font-size: 14px; }
+.car-card small { color: var(--muted); font-size: 12px; }
+.car-card .lock { color: var(--primary); }
+
+/* ---------- HUD ---------- */
+.hud-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 12px 14px;
+}
+.hud-left, .hud-right { display: flex; gap: 8px; align-items: center; }
+.pill {
+  background: rgba(8,12,28,0.7); border-radius: 20px; padding: 6px 14px;
+  font-size: 15px; font-weight: 700;
+}
+.pill b { color: var(--primary); }
+.lives { display: flex; gap: 2px; font-size: 20px; }
+
+.question {
+  position: absolute; top: 64px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,12,28,0.82); border: 2px solid var(--primary);
+  border-radius: 16px; padding: 10px 26px; font-size: 34px; font-weight: 800;
+  letter-spacing: 2px; box-shadow: var(--shadow); white-space: nowrap;
+}
+.question.flash-ok { animation: flashOk 0.4s; }
+.question.flash-bad { animation: flashBad 0.4s; }
+@keyframes flashOk { 0% { background: rgba(56,225,196,0.9);} 100%{ background: rgba(8,12,28,0.82);} }
+@keyframes flashBad { 0% { background: rgba(255,93,108,0.9);} 100%{ background: rgba(8,12,28,0.82);} }
+
+.combo {
+  position: absolute; top: 130px; left: 50%; transform: translateX(-50%);
+  font-size: 22px; font-weight: 800; color: var(--accent);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6); animation: floatUp 0.9s ease;
+}
+@keyframes floatUp { 0%{ transform: translate(-50%, 10px); opacity: 0;} 30%{opacity:1;} 100%{ transform: translate(-50%,-20px); opacity: 0; } }
+
+.touch-controls {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; padding: 0 18px 26px;
+}
+.touch-btn {
+  width: 76px; height: 76px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,0.14); color: #fff; font-size: 30px;
+  backdrop-filter: blur(4px); cursor: pointer;
+}
+.touch-btn:active { background: rgba(255,206,58,0.4); }
+
+/* ---------- Game over ---------- */
+.result-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin: 14px 0; }
+.result-grid div { background: rgba(0,0,0,0.25); border-radius: 12px; padding: 10px; }
+.result-grid small { color: var(--muted); display: block; font-size: 12px; }
+.result-grid b { font-size: 24px; color: var(--primary); }
+.badge { background: var(--accent); color: #042a25; border-radius: 12px; padding: 8px; font-weight: 800; }
+
+@media (max-width: 760px) {
+  .garage-body { flex-direction: column; }
+  .garage-info { width: 100%; max-height: 40vh; }
+  .title { font-size: 34px; }
+}
+@media (hover: none) {
+  .touch-controls { display: flex; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .touch-controls { opacity: 0.5; }
+}
+
+/* ============ 越野模式 ============ */
+.btn-accent { background: linear-gradient(180deg, #38e1c4, #1fb89d); color: #04332c; box-shadow: 0 6px 0 #157e6b; }
+.btn-accent:active { box-shadow: 0 2px 0 #157e6b; }
+
+/* 进度条 */
+.progress-wrap {
+  position: absolute; top: 56px; left: 50%; transform: translateX(-50%);
+  width: min(420px, 80vw); display: flex; align-items: center; gap: 8px;
+}
+.progress-bar {
+  flex: 1; height: 12px; border-radius: 8px;
+  background: rgba(8,12,28,0.55); overflow: hidden; border: 1px solid rgba(255,255,255,0.2);
+}
+.progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #38e1c4, #ffce3a);
+  transition: width 0.15s linear;
+}
+.progress-flag { font-size: 18px; }
+
+/* 越野操控：左右 + 油门刹车 */
+.offroad-controls {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: flex; justify-content: space-between; align-items: flex-end;
+  padding: 0 16px 24px;
+}
+.pedals { display: flex; gap: 10px; align-items: flex-end; }
+.pedal {
+  border: none; border-radius: 16px; color: #fff; font-weight: 800; font-size: 16px;
+  font-family: inherit; cursor: pointer; backdrop-filter: blur(4px);
+}
+.pedal.gas { width: 96px; height: 64px; background: rgba(56,225,196,0.55); }
+.pedal.brake { width: 64px; height: 52px; background: rgba(255,93,108,0.5); }
+.pedal:active { filter: brightness(1.2); }
+
+/* 通关测验 */
+.quiz-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+.quiz-meta b { color: var(--primary); }
+.question.quiz-q {
+  position: static; transform: none; display: block; margin: 0 auto 16px;
+  width: fit-content; font-size: 30px;
+}
+.quiz-choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.quiz-choices.two { grid-template-columns: repeat(2, 1fr); }
+.quiz-choice {
+  background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.12); color: var(--txt);
+  border-radius: 14px; padding: 18px 8px; font-size: 26px; font-weight: 800;
+  font-family: inherit; cursor: pointer; transition: 0.12s;
+}
+.quiz-choice:hover { border-color: var(--primary); }
+.quiz-choice.right { background: rgba(46,230,166,0.85); color: #042a25; border-color: #2ee6a6; }
+.quiz-choice.wrong { background: rgba(255,93,108,0.85); color: #2a0006; border-color: #ff5d6c; }
+.quiz-choice:disabled { cursor: default; }
+.quiz-feedback { min-height: 24px; margin-top: 14px; font-weight: 700; font-size: 18px; }
+.quiz-feedback.ok { color: var(--accent); }
+.quiz-feedback.bad { color: var(--danger); }
+
+/* 车辆性能条 */
+.car-stats { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
+.stat-bar { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.stat-bar span { width: 56px; flex-shrink: 0; }
+.stat-bar .track { flex: 1; height: 8px; background: rgba(0,0,0,0.3); border-radius: 6px; overflow: hidden; }
+.stat-bar .fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #38e1c4, #ffce3a); }
+
+/* 车库缩略图：真实 3D 车模渲染图 */
+.car-card .thumb {
+  background-color: #1b2647;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+/* 越野当前地形标签 */
+.theme-tag {
+  position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,12,28,0.6); border-radius: 12px; padding: 3px 12px;
+  font-size: 13px; font-weight: 700; color: var(--accent);
+}
+
+/* 越野关卡选择 chips */
+.level-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lchip {
+  background: rgba(0,0,0,0.28); border: 2px solid transparent; color: var(--txt);
+  border-radius: 10px; padding: 6px 9px; cursor: pointer; font-size: 12px; font-family: inherit;
+  display: flex; flex-direction: column; align-items: center; min-width: 58px; line-height: 1.25;
+}
+.lchip b { font-size: 13px; }
+.lchip small { color: var(--muted); font-size: 10px; }
+.lchip.active { border-color: var(--accent); background: rgba(56,225,196,0.14); }
+.lchip.locked { opacity: 0.45; cursor: not-allowed; }
